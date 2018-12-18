@@ -174,10 +174,10 @@ jmem_heap_init (void)
 #endif /* !JERRY_CPOINTER_32_BIT */
 
 #ifndef JERRY_SYSTEM_ALLOCATOR
-  char* path = "/Users/tunan/oops";
+  char* path = "/home/tunan/oops";
   size_t size = JMEM_HEAP_AREA_SIZE;
   int fd = open(path, O_RDWR|O_TRUNC);
-  lseek(fd, size, SEEK_SET);
+  lseek(fd, (int)size, SEEK_SET);
   write(fd,"",1);
   void* area = mmap(NULL, 524280, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   int ret = close(fd);
@@ -188,7 +188,7 @@ jmem_heap_init (void)
   firstPosition = (jmem_heap_free_t *)&area[0];
   printf("position of first %d\n", &area[0]);
   JERRY_HEAP_CONTEXT(area) = &area[8];
-  printf("position of area %d\n", &area[8]);
+//  printf("position of area %d\n", &area[8]);
   JERRY_ASSERT ((uintptr_t) JERRY_HEAP_CONTEXT (area) % JMEM_ALIGNMENT == 0);
 
   JERRY_CONTEXT (jmem_heap_limit) = HEAP_LIMIT_SIZE;
@@ -201,7 +201,7 @@ jmem_heap_init (void)
   firstPosition->size = 0;
   firstPosition->next_offset = JMEM_HEAP_GET_OFFSET_FROM_ADDR (region_p);
 
-  JERRY_CONTEXT (jmem_heap_list_skip_p) = &firstPosition;
+  JERRY_CONTEXT (jmem_heap_list_skip_p) = firstPosition;
 
   VALGRIND_NOACCESS_SPACE (JERRY_HEAP_CONTEXT (area), JMEM_HEAP_AREA_SIZE);
 
@@ -281,7 +281,7 @@ jmem_heap_alloc_block_internal (const size_t size)
   else
   {
     uint32_t current_offset = firstPosition->next_offset;
-    jmem_heap_free_t *prev_p = &firstPosition;
+    jmem_heap_free_t *prev_p = firstPosition;
 
     while (current_offset != JMEM_HEAP_END_OF_LIST)
     {
@@ -482,7 +482,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   jmem_heap_free_t *prev_p;
   jmem_heap_free_t *next_p;
 
-  VALGRIND_DEFINED_SPACE (&firstPosition, sizeof (jmem_heap_free_t));
+  VALGRIND_DEFINED_SPACE (firstPosition, sizeof (jmem_heap_free_t));
 
   if (block_p > JERRY_CONTEXT (jmem_heap_list_skip_p))
   {
@@ -491,7 +491,7 @@ jmem_heap_free_block (void *ptr, /**< pointer to beginning of data space of the 
   }
   else
   {
-    prev_p = &firstPosition;
+    prev_p = firstPosition;
     JMEM_HEAP_STAT_NONSKIP ();
   }
 
